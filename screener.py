@@ -17,7 +17,10 @@ def run_screener(tickers):
     
     for ticker in tickers:
         try:
-            df = yf.download(ticker, period="6mo", interval="1d", progress=False)
+            # Sistem otomatis menambahkan .JK untuk download dari Yahoo Finance
+            yf_ticker = f"{ticker}.JK"
+            df = yf.download(yf_ticker, period="6mo", interval="1d", progress=False)
+            
             if df.empty: continue
             
             # Hitung Kernel & Syarat
@@ -28,19 +31,21 @@ def run_screener(tickers):
             df['Bullish_Change'] = df['Is_Bullish_Rate'] & df['Is_Bearish_Rate'].shift(1)
             df['Bearish_Change'] = df['Is_Bearish_Rate'] & df['Is_Bullish_Rate'].shift(1)
             
-            # Cek hari terakhir
+            # Cek hari terakhir (Masukkan ticker aslinya ke dalam grup, tanpa .JK)
             if df['Bullish_Change'].iloc[-1]:
-                bullish_group.append(ticker.replace('.JK', ''))
+                bullish_group.append(ticker)
             elif df['Bearish_Change'].iloc[-1]:
-                bearish_group.append(ticker.replace('.JK', ''))
+                bearish_group.append(ticker)
                 
         except Exception as e:
             pass
             
     return bullish_group, bearish_group
 
-# Eksekusi (Tambahkan saham lain dengan akhiran .JK)
-daftar_saham = ["BBCA.JK", "BBRI.JK", "BMRI.JK", "BBNI.JK", "AMMN.JK", "GOTO.JK", "TLKM.JK", "ASII.JK", "BREN.JK"]
+# --- EKSEKUSI ---
+# Sekarang Anda cukup memasukkan kode sahamnya saja TANPA .JK
+daftar_saham = [
+    "BBCA", "BBRI", "BMRI", "BBNI", "AMMN", "GOTO", "TLKM", "ASII", "BREN"]
 hijau, merah = run_screener(daftar_saham)
 
 # Generate File index.html
@@ -58,8 +63,8 @@ html_content = f"""
         .update-time {{ text-align: center; color: #777; margin-bottom: 30px; }}
         .container {{ display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }}
         .box {{ background: white; border: 1px solid #ddd; padding: 20px; border-radius: 8px; width: 300px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }}
-        .green-title {{ color: #2e7d32; border-bottom: 2px solid #2e7d32; padding-bottom: 10px; }}
-        .red-title {{ color: #c62828; border-bottom: 2px solid #c62828; padding-bottom: 10px; }}
+        .green-title {{ color: #2e7d32; border-bottom: 2px solid #2e7d32; padding-bottom: 10px; text-align: center; }}
+        .red-title {{ color: #c62828; border-bottom: 2px solid #c62828; padding-bottom: 10px; text-align: center; }}
         ul {{ list-style-type: none; padding: 0; }}
         li {{ padding: 8px 0; border-bottom: 1px solid #eee; font-size: 18px; font-weight: bold; text-align: center; }}
     </style>
@@ -87,7 +92,7 @@ html_content = f"""
 </html>
 """
 
-with open("index.html", "w") as f:
+with open("index.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
-print("Berhasil! File index.html telah digenerate.")
+print("Berhasil! File index.html telah digenerate tanpa .JK.")
